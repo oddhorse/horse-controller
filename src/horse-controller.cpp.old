@@ -1,0 +1,296 @@
+/*********************************************************************
+ This is an example for our nRF52 based Bluefruit LE modules
+
+ Pick one up today in the adafruit shop!
+
+ Adafruit invests time and resources providing this open source code,
+ please support Adafruit and open-source hardware by purchasing
+ products from Adafruit!
+
+ MIT license, check LICENSE for more information
+ All text above, and the splash screen below must be included in
+ any redistribution
+*********************************************************************/
+
+/* This example requires following library
+ * - https://github.com/FortySevenEffects/arduino_midi_library/ (MIDI Library)
+ *
+ * For BLE MIDI Setup on PC/mobile checkout our learn guide
+ * - https://learn.adafruit.com/wireless-untztrument-using-ble-midi/ble-midi-setup
+ */
+
+#include <Arduino.h>
+#include <Adafruit_DotStar.h>
+#include <bluefruit.h>
+#include <MIDI.h>
+
+// define nice names for on-board bells + whistles
+#define RGB_DATA_PIN 8
+#define RGB_CLOCK_PIN 6
+#define BUTTON_BUILTIN 4
+// this one is defined
+//#define LED_BUILTIN 3
+
+#define FIRMWARE_VER "0.0.1"
+#define DEVICE_NAME "horse controller"
+#define DEVICE_MANUFACTURER "oddhorse"
+#define DEVICE_MODEL "BETA.1"
+
+
+#define Sprint(...) (Serial.print(__VA_ARGS__))
+#define Sprintf(...) (Serial.printf(__VA_ARGS__))
+#define Sprintln(...) (Serial.println(__VA_ARGS__))
+
+
+
+// if serial debug is disabled, disable all serial output
+#ifdef DISABLE_SERIAL_DEBUG
+#define Sprint(...)
+#define Sprintf(...)
+#define Sprintln(...)
+#endif
+
+BLEDis bledis;
+BLEMidi blemidi;
+
+// create dotstar controller
+Adafruit_DotStar dotstar(1, RGB_DATA_PIN, RGB_CLOCK_PIN);
+
+void handleNoteOn(byte channel, byte pitch, byte velocity);
+void handleNoteOff(byte channel, byte pitch, byte velocity);
+void connectedCallback(uint16_t conn_handle);
+void disconnectedCallback(uint16_t conn_handle, uint8_t reason);
+
+void startAdv(void);
+
+void midiRead();
+
+void setup()
+{
+  #ifndef DISABLE_SERIAL_DEBUG 
+    Serial.begin(115200);
+    while ( !Serial ) delay(10);   // for nrf52840 with native usb
+  #endif
+  
+
+  Sprintln("horse controller test");
+
+  // Config the peripheral connection with maximum bandwidth 
+  // more SRAM required by SoftDevice
+  // Note: All config***() function must be called before begin()
+  Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);  
+
+  Bluefruit.begin();
+  Bluefruit.setTxPower(4);    // Check bluefruit.h for supported values
+
+  // Setup the on board blue LED to be disabled on CONNECT
+  Bluefruit.autoConnLed(false);
+
+  // Configure and Start Device Information Service
+  Bluefruit.setName(DEVICE_NAME);
+  bledis.setManufacturer(DEVICE_MANUFACTURER);
+  bledis.setModel(DEVICE_MODEL);
+  bledis.begin();
+
+  // Initialize MIDI, and listen to all MIDI channels
+  // This will also call blemidi service's begin()
+  MIDI.begin(MIDI_CHANNEL_OMNI);
+
+  // Attach the handleNoteOn function to the MIDI Library. It will
+  // be called whenever the Bluefruit receives MIDI Note On messages.
+  MIDI.setHandleNoteOn(handleNoteOn);
+
+  // Do the same for MIDI Note Off messages.
+  MIDI.setHandleNoteOff(handleNoteOff);
+
+  // Register connection and disconnection callbacks
+  Bluefruit.Periph.setConnectCallback(connectedCallback);
+  Bluefruit.Periph.setDisconnectCallback(disconnectedCallback);
+  
+  // Set up and start advertising
+  startAdv();
+
+  // Initialize the DotStar
+  dotstar.begin();
+  dotstar.setBrightness(32); // Adjust brightness as needed
+  dotstar.clear();
+
+  // button and led setup
+  pinMode(BUTTON_BUILTIN, INPUT_PULLUP);
+
+  HwPWM0.addPin(LED_BUILTIN);
+  HwPWM0.begin();
+  HwPWM0.setResolution(15);
+  HwPWM0.setClockDiv(PWM_PRESCALER_PRESCALER_DIV_2); // 8MHz
+
+  // Start MIDI read loop
+  Scheduler.startLoop(midiRead);
+
+  dotstar.setPixelColor(0, dotstar.ColorHSV(0)); // red
+}
+
+
+
+void startAdv(void) {
+  // Set General Discoverable Mode flag
+  Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
+
+  // Advertise TX Power
+  Bluefruit.Advertising.addTxPower();
+
+  // Advertise BLE MIDI Service
+  Bluefruit.Advertising.addService(blemidi);
+
+  // Secondary Scan Response packet (optional)
+  // Since there is no room for 'Name' in Advertising packet
+  Bluefruit.ScanResponse.addName();
+
+  /* Start Advertising
+   * - Enable auto advertising if disconnected
+   * - Interval:  fast mode = 20 ms, slow mode = 152.5 ms
+   * - Timeout for fast mode is 30 seconds
+   * - Start(timeout) with timeout = 0 will advertise forever (until connected)
+   *
+   * For recommended advertising interval
+   * https://developer.apple.com/library/content/qa/qa1931/_index.html   
+   */
+  Bluefruit.Advertising.restartOnDisconnect(true);
+  Bluefruit.Advertising.setInterval(32, 244);    // in unit of 0.625 ms
+  Bluefruit.Advertising.setFastTimeout(30);      // number of seconds in fast mode
+  Bluefruit.Advertising.start(0);                // 0 = Don't stop advertising after n seconds  
+
+  Sprintln("waiting for bluetooth connection...");
+}
+
+/**
+updates brightness of onboard led in a pulse pattern. meant to be run in loop.
+*/
+
+float heartbeatStrength = 1.0; // brightness for onboard led flash
+float heartbeatPeriod = 0.0; // Angle (or period) for sine wave
+float heartbeatSpeed = 6; // speed of flashing, in Hz
+void pulseLED() {
+  static unsigned long lastIter = 0; // timestamp for elapsed time
+  if ((millis() - lastIter) >= 10) { // if 10ms have passed:
+    float brightness = (sin(heartbeatPeriod) + 1) / 2 * heartbeatStrength; // Normalize sine wave to 0-1 range
+
+    const int maxValue = bit(15) - 1; // 15-bit PWM max value
+    int pwmValue = brightness * maxValue; // Scale to PWM max value
+    // Write PWM value to the LED
+    HwPWM0.writePin(LED_BUILTIN, pwmValue);
+    // Increment angle for the next loop iteration
+    static float incrementBase = TWO_PI / 100; // multiply by hz for proper increments
+    heartbeatPeriod += heartbeatSpeed * incrementBase; // Adjust this for speed of pulsing
+    if (heartbeatPeriod > TWO_PI) heartbeatPeriod -= TWO_PI;
+    // save timestamp for elapsed time calc
+    lastIter = millis();
+  }
+}
+
+// **********************
+// handlers and callbacks
+// **********************
+
+void handleNoteOn(byte channel, byte pitch, byte velocity) {
+  // Log when a note is pressed.
+  Sprintf("Note on: channel = %d, pitch = %d, velocity - %d", channel, pitch, velocity);
+  Sprintln();
+}
+
+void handleNoteOff(byte channel, byte pitch, byte velocity) {
+  // Log when a note is released.
+  Sprintf("Note off: channel = %d, pitch = %d, velocity - %d", channel, pitch, velocity);
+  Sprintln();
+}
+
+/**
+  function run when bluetooth connection is established to device
+*/
+void connectedCallback(uint16_t conn_handle) {
+  Sprintln("bluetooth connected!");
+  heartbeatStrength = 0.2;
+  heartbeatPeriod = 0.0;
+  heartbeatSpeed = 0.75;
+}
+
+/**
+  function run when device is disconnected from bluetooth
+*/
+void disconnectedCallback(uint16_t conn_handle, uint8_t reason) {
+  Sprintln("bluetooth disconnected! waiting for connection...");
+  heartbeatStrength = 1.0;
+  heartbeatPeriod = 0.0;
+  heartbeatSpeed = 6;
+}
+
+bool buttonState = false;
+bool buttonStateLast = false;
+
+unsigned long lastPress = 0; //timestamp for last time button was pressed
+void pulseDotstar() {
+  unsigned long elapsed = millis() - lastPress;
+  static float release = 100; // release time for light in ms
+  static float exp = 0.5; // exponent for falloff
+  static unsigned long lastIter = 0; // timestamp for elapsed time
+
+  // first skip the 10ms clock for quick response
+  if (elapsed == 0) {
+    dotstar.setBrightness(255);
+    dotstar.setPixelColor(0, dotstar.gamma32(dotstar.ColorHSV(random(65536)))); // random color each hit
+    dotstar.show();
+  }
+  // if 10ms have passed:
+  else if ((millis() - lastIter) >= 10) { 
+    float brightness = -pow((elapsed/release), exp) + 1.0; // translate elapsed ms to 1-0 range
+    if (brightness < 0.0) brightness = 0.0;
+    int brightUnit = brightness * 255; // Scale to 0-255 for setBrightness()
+    // Write PWM value to the LED
+    dotstar.setBrightness(brightUnit);
+    dotstar.show();
+    // save timestamp for elapsed time calc
+    lastIter = millis();
+  }
+}
+
+void loop() {
+  pulseLED();
+  // STATE READS
+  // builtin button
+  buttonState = (digitalRead(BUTTON_BUILTIN) == LOW) ? true : false;
+
+  // Don't continue if we aren't connected or the connected device isn't ready to receive messages.
+  if (! Bluefruit.connected() || ! blemidi.notifyEnabled()) {
+    return;
+  }
+
+  if (buttonState == true && buttonStateLast == false) {
+    //Sprintln("Button pressed!");
+    MIDI.sendNoteOn(60, 127, 1);
+    lastPress = millis();
+  } else if (buttonState == false && buttonStateLast == true) {
+    //Sprintln("Button unpressed!");
+    MIDI.sendNoteOff(60, 0, 1);
+  }
+  pulseDotstar();
+
+  // SAVE STATE
+  buttonStateLast = buttonState;
+}
+
+
+
+void midiRead() {
+  // Don't continue if we aren't connected.
+  if (! Bluefruit.connected()) {
+    return;
+  }
+
+  // Don't continue if the connected device isn't ready to receive messages.
+  if (! blemidi.notifyEnabled()) {
+    return;
+  }
+
+  // read any new MIDI messages
+  MIDI.read();
+}
+
