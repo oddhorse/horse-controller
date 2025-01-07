@@ -11,6 +11,8 @@ void setupMidi() {
     // attach handlers to midi note receiving
     MIDI.setHandleNoteOn(handleNoteOn);
     MIDI.setHandleNoteOff(handleNoteOff);
+    // Start MIDI read loop
+    Scheduler.startLoop(midiRead);
 }
 
 void handleNoteOn(byte channel, byte pitch, byte velocity) {

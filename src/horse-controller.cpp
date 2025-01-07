@@ -29,17 +29,9 @@ void setup()
 
   setupBluetooth();
   setupMidi(); //blemidi called in here
-  
-  // Set up and start advertising
   startBTAdvertisement();
-  
-  // button and led setup
-  pinMode(BUTTON_BUILTIN, INPUT_PULLUP);
-
+  pinMode(BUTTON_BUILTIN, INPUT_PULLUP); // set button as an input
   setupLights();
-
-  // Start MIDI read loop
-  Scheduler.startLoop(midiRead);
 }
 
 bool buttonState = false;
