@@ -11,53 +11,58 @@
 #include <Arduino.h>
 #include <Adafruit_DotStar.h>
 #include <bluefruit.h>
+#include <Adafruit_TinyUSB.h>
+#include <vector>
 
+#include "MIDIButton.h"
+
+#include "display_handler.h"
 #include "midi_handler.h"
 #include "lights_handler.h"
 #include "bluetooth_handler.h"
 #include "device_info.h"
 #include "serial_info.h"
 
+
 // define nice name for button
 #define BUTTON_BUILTIN 4
+
+std::vector<MIDIButton> buttons = {
+  MIDIButton(7, 16, 1, MIDI_BUTTON_TYPE_CC),
+  MIDIButton(9, 17, 1, MIDI_BUTTON_TYPE_CC),
+  MIDIButton(10, 18, 1, MIDI_BUTTON_TYPE_CC),
+  MIDIButton(11, 19, 1, MIDI_BUTTON_TYPE_CC),
+  MIDIButton(BUTTON_BUILTIN, 60, 1, MIDI_BUTTON_TYPE_NOTE)
+};
 
 void setup()
 {
 
   Serial.begin(115200);
 
-
+  setupDisplay();
   setupBluetooth();
   setupMidi(); //blemidi called in here
   startBTAdvertisement();
-  pinMode(BUTTON_BUILTIN, INPUT_PULLUP); // set button as an input
   setupLights();
 }
 
-bool buttonState = false;
-bool buttonStateLast = false;
 
 void loop() {
   updateSerial();
 
   updateLED();
-  // STATE READS
-  // builtin button
-  buttonState = (digitalRead(BUTTON_BUILTIN) == LOW) ? true : false;
 
   // Don't continue if we aren't connected or the connected device isn't ready to receive messages.
   if (! midiReady()) {
     return;
   }
 
-  if (buttonState == true && buttonStateLast == false) {
-    MIDI.sendNoteOn(60, 127, 1);
-    updateLastButtonPress();
-  } else if (buttonState == false && buttonStateLast == true) {
-    MIDI.sendNoteOff(60, 0, 1);
+  // Iterate over all buttons in the vector
+  for (size_t i = 0; i < buttons.size(); ++i) {
+    buttons[i].update();
   }
-  updateDotstar();
 
-  // SAVE STATE
-  buttonStateLast = buttonState;
+  
+  updateDotstar();
 }

@@ -3,6 +3,7 @@
 #include "midi_handler.h"
 #include "device_info.h"
 #include "lights_handler.h"
+#include "display_handler.h"
 
 BLEDis bledis;
 
@@ -66,9 +67,11 @@ void startBTAdvertisement() {
 void connectedCallback(uint16_t conn_handle) {
     Serial.println("bluetooth connected!");
     flashConnected();
+    startDisplayTask(updateButtonDisplay);
 }
 
 void disconnectedCallback(uint16_t conn_handle, uint8_t reason) {
     Serial.println("bluetooth disconnected! waiting for connection...");
     flashDisconnected();
+    startDisplayTask(awaitingConnectionLoop);
 }
