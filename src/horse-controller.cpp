@@ -1,20 +1,18 @@
-/*********************************************************************
- * horse-controller.cpp - main file for horse controller
- *
- * main file for horse controller. sets up
- * bluetooth connection, MIDI connection, and the button and LED
- * hardware. also contains main loop for controller.
- *
- * author: oddhorse (John Trinh)
- *********************************************************************/
 
+/**
+ * @file horse-controller.cpp
+ * @brief entry file for horse controller
+ *
+ * standard setup/loop arduino construction
+ *
+ * @author oddhorse (John Trinh)
+ */
 // TODO: use namespaces in __handler files
 
 #include <Arduino.h>
 #include <Adafruit_DotStar.h>
 #include <bluefruit.h>
 #include <Adafruit_TinyUSB.h>
-#include <vector>
 
 #include "MIDIButton.h"
 #include "imu_handler.h"
