@@ -8,6 +8,8 @@
  */
 // TODO: use namespaces in __handler files
 
+// TODO: use constexpr instead of #defines for constants when possible
+
 #include <Arduino.h>
 #include <Adafruit_DotStar.h>
 #include <bluefruit.h>
@@ -29,14 +31,14 @@ void setup()
 	// while ( !Serial ) delay(10);
 
 	Serial.println("setting up encoder...");
-	setupEncoder();
-	// setupDisplay();
+	Ctrls::setupEncoder();
+	// Display::setupDisplay();
 	Serial.println("setting up bluetooth...");
-	setupBluetooth();
+	BT::setupBluetooth();
 	Serial.println("setting up midi...");
 	setupMidi(); // blemidi called in here
 	Serial.println("starting bt advertisement...");
-	startBTAdvertisement();
+	BT::startBTAdvertisement();
 	Serial.println("setting up lights...");
 	setupLights();
 	Serial.println("setting up IMU...");
@@ -84,7 +86,7 @@ void loop()
 		return;
 	}
 
-	updateControls();
+	Ctrls::updateControls();
 
 	updateDotstar();
 }

@@ -15,79 +15,88 @@
 #include "lights_handler.h"
 // #include "display_handler.h"
 
-BLEDis bledis;
+// TODO: doc this file, verify header comment is correct
 
-void setupBluetooth()
+namespace
 {
-	// Config the peripheral connection with maximum bandwidth
-	// more SRAM required by SoftDevice
-	// Note: All config***() function must be called before begin()
-	Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);
+	BLEDis bledis;
 
-	Bluefruit.begin();
-	Bluefruit.setTxPower(4); // Check bluefruit.h for supported values
+	void connectedCallback(uint16_t conn_handle)
+	{
+		Serial.println("bluetooth connected!");
+		flashConnected();
+		// startDisplayTask(updateButtonDisplay);
+		// TODO reenable these
+	}
 
-	// Setup the on board blue LED to be disabled on CONNECT
-	Bluefruit.autoConnLed(false);
-
-	// configure bt info
-	Bluefruit.setName(DEVICE_NAME);
-	Bluefruit.setAppearance(BLE_APPEARANCE_GENERIC_EYE_GLASSES);
-
-	// Configure and Start Device Information Service
-	bledis.setManufacturer(MANUFACTURER);
-	bledis.setModel(MODEL);
-	bledis.begin();
-
-	// Register connection and disconnection callbacks
-	Bluefruit.Periph.setConnectCallback(connectedCallback);
-	Bluefruit.Periph.setDisconnectCallback(disconnectedCallback);
+	void disconnectedCallback(uint16_t conn_handle, uint8_t reason)
+	{
+		Serial.println("bluetooth disconnected! waiting for connection...");
+		flashDisconnected();
+		// startDisplayTask(awaitingConnectionLoop);
+		// TODO reenable these
+	}
 }
 
-void startBTAdvertisement()
+namespace BT
 {
-	// Set General Discoverable Mode flag
-	Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
 
-	// Advertise TX Power
-	Bluefruit.Advertising.addTxPower();
+	void setupBluetooth()
+	{
+		// Config the peripheral connection with maximum bandwidth
+		// more SRAM required by SoftDevice
+		// Note: All config***() function must be called before begin()
+		Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);
 
-	// Advertise BLE MIDI Service
-	Bluefruit.Advertising.addService(blemidi);
+		Bluefruit.begin();
+		Bluefruit.setTxPower(4); // Check bluefruit.h for supported values
 
-	// Secondary Scan Response packet (optional)
-	// Since there is no room for 'Name' in Advertising packet
-	Bluefruit.ScanResponse.addName();
+		// Setup the on board blue LED to be disabled on CONNECT
+		Bluefruit.autoConnLed(false);
 
-	/* Start Advertising
-	 * - Enable auto advertising if disconnected
-	 * - Interval:  fast mode = 20 ms, slow mode = 152.5 ms
-	 * - Timeout for fast mode is 30 seconds
-	 * - Start(timeout) with timeout = 0 will advertise forever (until connected)
-	 *
-	 * For recommended advertising interval
-	 * https://developer.apple.com/library/content/qa/qa1931/_index.html
-	 */
-	Bluefruit.Advertising.restartOnDisconnect(true);
-	Bluefruit.Advertising.setInterval(32, 244); // in unit of 0.625 ms
-	Bluefruit.Advertising.setFastTimeout(30);	  // number of seconds in fast mode
-	Bluefruit.Advertising.start(0);				  // 0 = Don't stop advertising after n seconds
+		// configure bt info
+		Bluefruit.setName(DEVICE_NAME);
+		Bluefruit.setAppearance(BLE_APPEARANCE_GENERIC_EYE_GLASSES);
 
-	Serial.println("waiting for bluetooth connection...");
-}
+		// Configure and Start Device Information Service
+		bledis.setManufacturer(MANUFACTURER);
+		bledis.setModel(MODEL);
+		bledis.begin();
 
-void connectedCallback(uint16_t conn_handle)
-{
-	Serial.println("bluetooth connected!");
-	flashConnected();
-	// startDisplayTask(updateButtonDisplay);
-	// TODO reenable these
-}
+		// Register connection and disconnection callbacks
+		Bluefruit.Periph.setConnectCallback(connectedCallback);
+		Bluefruit.Periph.setDisconnectCallback(disconnectedCallback);
+	}
 
-void disconnectedCallback(uint16_t conn_handle, uint8_t reason)
-{
-	Serial.println("bluetooth disconnected! waiting for connection...");
-	flashDisconnected();
-	// startDisplayTask(awaitingConnectionLoop);
-	// TODO reenable these
+	void startBTAdvertisement()
+	{
+		// Set General Discoverable Mode flag
+		Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
+
+		// Advertise TX Power
+		Bluefruit.Advertising.addTxPower();
+
+		// Advertise BLE MIDI Service
+		Bluefruit.Advertising.addService(blemidi);
+
+		// Secondary Scan Response packet (optional)
+		// Since there is no room for 'Name' in Advertising packet
+		Bluefruit.ScanResponse.addName();
+
+		/* Start Advertising
+		 * - Enable auto advertising if disconnected
+		 * - Interval:  fast mode = 20 ms, slow mode = 152.5 ms
+		 * - Timeout for fast mode is 30 seconds
+		 * - Start(timeout) with timeout = 0 will advertise forever (until connected)
+		 *
+		 * For recommended advertising interval
+		 * https://developer.apple.com/library/content/qa/qa1931/_index.html
+		 */
+		Bluefruit.Advertising.restartOnDisconnect(true);
+		Bluefruit.Advertising.setInterval(32, 244); // in unit of 0.625 ms
+		Bluefruit.Advertising.setFastTimeout(30);	// number of seconds in fast mode
+		Bluefruit.Advertising.start(0);				// 0 = Don't stop advertising after n seconds
+
+		Serial.println("waiting for bluetooth connection...");
+	}
 }

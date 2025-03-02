@@ -7,6 +7,9 @@
  * manages input from multiple MIDI buttons and rotary encoder.
  * handles button state tracking, debouncing, and MIDI signal generation.
  */
+
+// TODO: doc this file, verify header comment is correct
+
 #include "control_handler.h"
 #include "MIDIButton.h"
 
@@ -22,61 +25,69 @@
 #define MIDDLE_FINGER_PIN 9
 #define INDEX_FINGER_PIN 7
 
-volatile int encoderPosition = 0;
-bool lastStateA;
-unsigned long timeOfLastChange = 0;
-
-std::vector<MIDIButton> buttons = {
-	 MIDIButton(PINKY_FINGER_PIN, 19, 1, MIDI_BUTTON_TYPE_CC, "pinky"),
-	 MIDIButton(RING_FINGER_PIN, 18, 1, MIDI_BUTTON_TYPE_DIAL, "ring"),
-	 MIDIButton(MIDDLE_FINGER_PIN, 17, 1, MIDI_BUTTON_TYPE_CC, "middle"),
-	 MIDIButton(INDEX_FINGER_PIN, 16, 1, MIDI_BUTTON_TYPE_CC, "index"),
-	 MIDIButton(BUTTON_BUILTIN, 60, 1, MIDI_BUTTON_TYPE_NOTE, "builtin")};
-
-void encoderISR()
+namespace
 {
-	int currentStateA = digitalRead(ENCODER_PIN_A);
+	bool lastStateA;
 
-	if (currentStateA != lastStateA)
+	void encoderISR()
 	{
-		if (millis() - timeOfLastChange > ENCODER_DEBOUNCE_MS)
-		{
-			timeOfLastChange = millis();
+		int currentStateA = digitalRead(ENCODER_PIN_A);
 
-			if (digitalRead(ENCODER_PIN_B) != currentStateA)
+		if (currentStateA != lastStateA)
+		{
+			if (millis() - Ctrls::timeOfLastChange > ENCODER_DEBOUNCE_MS)
 			{
-				encoderPosition++;
-			}
-			else
-			{
-				encoderPosition--;
+				Ctrls::timeOfLastChange = millis();
+
+				if (digitalRead(ENCODER_PIN_B) != currentStateA)
+				{
+					Ctrls::encoderPosition++;
+				}
+				else
+				{
+					Ctrls::encoderPosition--;
+				}
 			}
 		}
+		lastStateA = currentStateA;
 	}
-	lastStateA = currentStateA;
 }
 
-void setupEncoder()
+namespace Ctrls
 {
-	pinMode(ENCODER_PIN_A, INPUT_PULLUP);
-	pinMode(ENCODER_PIN_B, INPUT_PULLUP);
+	volatile int encoderPosition = 0;
+	unsigned long timeOfLastChange = 0;
 
-	lastStateA = digitalRead(ENCODER_PIN_A);
+	std::vector<MIDIButton> buttons = {
+		MIDIButton(PINKY_FINGER_PIN, 19, 1, MIDI_BUTTON_TYPE_CC, "pinky"),
+		MIDIButton(RING_FINGER_PIN, 18, 1, MIDI_BUTTON_TYPE_DIAL, "ring"),
+		MIDIButton(MIDDLE_FINGER_PIN, 17, 1, MIDI_BUTTON_TYPE_CC, "middle"),
+		MIDIButton(INDEX_FINGER_PIN, 16, 1, MIDI_BUTTON_TYPE_CC, "index"),
+		MIDIButton(BUTTON_BUILTIN, 60, 1, MIDI_BUTTON_TYPE_NOTE, "builtin")};
 
-	// Attach interrupt to pin A
-	attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
-}
-
-void setEncoder(int val)
-{
-	encoderPosition = val;
-}
-
-// TODO: use hardware interrupts instead of this?
-void updateControls()
-{
-	for (size_t i = 0; i < buttons.size(); ++i)
+	void setupEncoder()
 	{
-		buttons[i].update();
+		pinMode(ENCODER_PIN_A, INPUT_PULLUP);
+		pinMode(ENCODER_PIN_B, INPUT_PULLUP);
+
+		lastStateA = digitalRead(ENCODER_PIN_A);
+
+		// Attach interrupt to pin A
+		attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
+	}
+
+	void setEncoder(int val)
+	{
+		encoderPosition = val;
+	}
+
+	// TODO: use hardware interrupts instead of this?
+
+	void updateControls()
+	{
+		for (size_t i = 0; i < buttons.size(); ++i)
+		{
+			buttons[i].update();
+		}
 	}
 }
