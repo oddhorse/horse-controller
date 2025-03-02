@@ -1,3 +1,18 @@
+/**
+ * @file imu_handler.cpp
+ * @brief handles IMU operations for horse controller project
+ *
+ * implements functionality for ICM20948 IMU sensor with Madgwick filter
+ * for orientation estimation. provides methods for initialization,
+ * calibration, motion detection, and calculating orientation angles.
+ *
+ * uses sensor data to provide dial control based on device
+ * orientation, mapping roll angle to 0-127 range.
+ *
+ * @note filter rate set to 100Hz with matching magnetometer config
+ *
+ * @author oddhorse (John Trinh)
+ */
 #include <Arduino.h>
 #include <Adafruit_ICM20948.h>
 #include <MadgwickAHRS.h>
@@ -237,9 +252,9 @@ void printMadgwick()
 	Serial.println(">roll:" + String(roll));
 }
 
-#define MICROS_PER_READING 1000000 / FILTER_RATE												 // number of microseconds to wait for clocking madgwick calcs to reading rate
-#define SENSOR_DELTA_STATIONARY_THRESHOLD 0.03													 // change in sensor values smaller than this number will trigger sleep mode
-#define SENSOR_STATIONARY_TIMEOUT_SECS 10															 // in seconds; time to wait before declaring movement timeout
+#define MICROS_PER_READING 1000000 / FILTER_RATE									 // number of microseconds to wait for clocking madgwick calcs to reading rate
+#define SENSOR_DELTA_STATIONARY_THRESHOLD 0.03										 // change in sensor values smaller than this number will trigger sleep mode
+#define SENSOR_STATIONARY_TIMEOUT_SECS 10											 // in seconds; time to wait before declaring movement timeout
 #define SENSOR_STATIONARY_TIMEOUT_CYCLES SENSOR_STATIONARY_TIMEOUT_SECS *FILTER_RATE // in cycles; number to wait before declaring movement timeout
 // updates pitch, yaw, roll variables
 void updateFilter()
@@ -263,13 +278,13 @@ void updateFilter()
 
 		// update madgwick
 		filter.update(
-			 gx, gy, gz,
-			 accel.acceleration.x,
-			 accel.acceleration.y,
-			 accel.acceleration.z,
-			 mag.magnetic.x,
-			 mag.magnetic.y,
-			 mag.magnetic.z);
+			gx, gy, gz,
+			accel.acceleration.x,
+			accel.acceleration.y,
+			accel.acceleration.z,
+			mag.magnetic.x,
+			mag.magnetic.y,
+			mag.magnetic.z);
 
 		// get new heading, pitch, roll
 		float newHeading, newPitch, newRoll;
@@ -290,9 +305,9 @@ void updateFilter()
 
 		// check if deltas are all under stationary threshold
 		if (
-			 dH < SENSOR_DELTA_STATIONARY_THRESHOLD &&
-			 dP < SENSOR_DELTA_STATIONARY_THRESHOLD &&
-			 dR < SENSOR_DELTA_STATIONARY_THRESHOLD)
+			dH < SENSOR_DELTA_STATIONARY_THRESHOLD &&
+			dP < SENSOR_DELTA_STATIONARY_THRESHOLD &&
+			dR < SENSOR_DELTA_STATIONARY_THRESHOLD)
 		{
 			// count how many cycles deltas remain under threshold
 			if (stationaryCount < SENSOR_STATIONARY_TIMEOUT_CYCLES)

@@ -1,4 +1,3 @@
-
 /**
  * @file horse-controller.cpp
  * @brief entry file for horse controller

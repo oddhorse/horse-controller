@@ -1,3 +1,9 @@
+/**
+ * @file serial_info.cpp
+ * @brief handles serial output of device information and connection status
+ * @author oddhorse (John Trinh)
+ * @copyright Copyright (c) 2025 oddhorse
+ */
 #include "serial_info.h"
 #include "midi_handler.h"
 #include "device_info.h"
