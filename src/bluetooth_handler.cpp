@@ -1,3 +1,13 @@
+/**
+ * @file bluetooth_handler.cpp
+ * @brief handles bluetooth low energy (BLE) connectivity and MIDI over BLE
+ *
+ * sets up bluetooth device info, configures advertising parameters,
+ * and manages connection/disconnection events with visual feedback
+ *
+ * @author oddhorse (John Trinh)
+ * @copyright copyright (c) 2025 oddhorse
+ */
 #include <bluefruit.h>
 #include "bluetooth_handler.h"
 #include "midi_handler.h"
@@ -60,8 +70,8 @@ void startBTAdvertisement()
 	 */
 	Bluefruit.Advertising.restartOnDisconnect(true);
 	Bluefruit.Advertising.setInterval(32, 244); // in unit of 0.625 ms
-	Bluefruit.Advertising.setFastTimeout(30);	// number of seconds in fast mode
-	Bluefruit.Advertising.start(0);				// 0 = Don't stop advertising after n seconds
+	Bluefruit.Advertising.setFastTimeout(30);	  // number of seconds in fast mode
+	Bluefruit.Advertising.start(0);				  // 0 = Don't stop advertising after n seconds
 
 	Serial.println("waiting for bluetooth connection...");
 }

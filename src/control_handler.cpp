@@ -1,19 +1,11 @@
 /**
  * @file control_handler.cpp
- * @brief This file contains the implementation of the control handler for the horse-controller project.
+ * @brief implementation for handling MIDI controller inputs (buttons and encoder).
+ * @author oddhorse (John Trinh)
+ * @copyright copyright (c) 2025 oddhorse
  *
- * The file provides functions to update the rotary encoder position and set a new encoder value.
- *
- * Dependencies:
- * - Encoder library
- *
- * Functions:
- * - void updateEncoder(): Updates the encoder position and prints the new position if it has changed.
- * - void setEncoder(int val): Sets the encoder to a specified value and updates the internal position tracking.
- *
- * Global Variables:
- * - Encoder mainEncoder: An instance of the Encoder class, initialized with pins 12 and 13.
- * - int encoderPosition: Tracks the current position of the encoder.
+ * manages input from multiple MIDI buttons and rotary encoder.
+ * handles button state tracking, debouncing, and MIDI signal generation.
  */
 #include "control_handler.h"
 #include "MIDIButton.h"
@@ -35,11 +27,11 @@ bool lastStateA;
 unsigned long timeOfLastChange = 0;
 
 std::vector<MIDIButton> buttons = {
-	MIDIButton(PINKY_FINGER_PIN, 19, 1, MIDI_BUTTON_TYPE_CC, "pinky"),
-	MIDIButton(RING_FINGER_PIN, 18, 1, MIDI_BUTTON_TYPE_DIAL, "ring"),
-	MIDIButton(MIDDLE_FINGER_PIN, 17, 1, MIDI_BUTTON_TYPE_CC, "middle"),
-	MIDIButton(INDEX_FINGER_PIN, 16, 1, MIDI_BUTTON_TYPE_CC, "index"),
-	MIDIButton(BUTTON_BUILTIN, 60, 1, MIDI_BUTTON_TYPE_NOTE, "builtin")};
+	 MIDIButton(PINKY_FINGER_PIN, 19, 1, MIDI_BUTTON_TYPE_CC, "pinky"),
+	 MIDIButton(RING_FINGER_PIN, 18, 1, MIDI_BUTTON_TYPE_DIAL, "ring"),
+	 MIDIButton(MIDDLE_FINGER_PIN, 17, 1, MIDI_BUTTON_TYPE_CC, "middle"),
+	 MIDIButton(INDEX_FINGER_PIN, 16, 1, MIDI_BUTTON_TYPE_CC, "index"),
+	 MIDIButton(BUTTON_BUILTIN, 60, 1, MIDI_BUTTON_TYPE_NOTE, "builtin")};
 
 void encoderISR()
 {

@@ -1,9 +1,12 @@
 /**
  * @file control_handler.h
- * @brief Header file for handling control mechanisms such as encoders and buttons.
+ * @brief header for handling control mechanisms like encoders and buttons
  *
- * This file contains declarations for managing the main encoder and MIDI buttons.
- * It provides functions to update and set the encoder values.
+ * contains declarations for managing main encoder and MIDI buttons,
+ * providing functions to update and set encoder values
+ *
+ * @author oddhorse (John Trinh)
+ * @copyright copyright (c) 2025 oddhorse
  */
 
 #define CORE_INT12_PIN 12

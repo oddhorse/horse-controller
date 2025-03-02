@@ -1,3 +1,17 @@
+/**
+ * @file midibutton.cpp
+ * @brief implementation of midi button functionality that responds to button presses and sends midi signals
+ *
+ * handles different button types:
+ * - note buttons: send note on/off messages
+ * - cc buttons: send control change messages
+ * - dial buttons: send continuous control change values
+ *
+ * includes debounce logic for reliable button state detection
+ *
+ * @author oddhorse (John Trinh)
+ * @copyright copyright (c) 2025 oddhorse
+ */
 #include "MIDIButton.h"
 #include "lights_handler.h"
 #include "display_handler.h"
@@ -7,7 +21,7 @@
 // TODO: rename params dataValue, and currentValue to less confusing things
 
 MIDIButton::MIDIButton(uint8_t pin, byte dataValue, byte channel, byte buttonType, const char buttonName[])
-	: name(buttonName), currentValue(0), buttonType(buttonType), _pin(pin), _dataValue(dataValue), _channel(channel), _currentState(HIGH), _lastState(HIGH), _debouncer(Bounce())
+	 : name(buttonName), currentValue(0), buttonType(buttonType), _pin(pin), _dataValue(dataValue), _channel(channel), _currentState(HIGH), _lastState(HIGH), _debouncer(Bounce())
 {
 	pinMode(_pin, INPUT_PULLUP);
 	_debouncer.attach(_pin);

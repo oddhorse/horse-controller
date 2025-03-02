@@ -1,3 +1,9 @@
+/**
+ * @file MIDIButton.h
+ * @brief handles button inputs and sending midi commands
+ * @author oddhorse (John Trinh)
+ * @copyright copyright (c) 2025 oddhorse
+ */
 #ifndef MIDIBUTTON_H
 #define MIDIBUTTON_H
 
