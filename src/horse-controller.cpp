@@ -8,6 +8,8 @@
  * Author: oddhorse (John Trinh)
 *********************************************************************/
 
+// TODO: use namespaces in __handler files
+
 #include <Arduino.h>
 #include <Adafruit_DotStar.h>
 #include <bluefruit.h>
@@ -15,54 +17,78 @@
 #include <vector>
 
 #include "MIDIButton.h"
-
-#include "display_handler.h"
+#include "imu_handler.h"
+//#include "display_handler.h"
+#include "control_handler.h"
 #include "midi_handler.h"
 #include "lights_handler.h"
 #include "bluetooth_handler.h"
 #include "device_info.h"
 #include "serial_info.h"
+#include "util.h"
 
-
-// define nice name for button
-#define BUTTON_BUILTIN 4
-
-std::vector<MIDIButton> buttons = {
-  MIDIButton(7, 16, 1, MIDI_BUTTON_TYPE_CC),
-  MIDIButton(9, 17, 1, MIDI_BUTTON_TYPE_CC),
-  MIDIButton(10, 18, 1, MIDI_BUTTON_TYPE_CC),
-  MIDIButton(11, 19, 1, MIDI_BUTTON_TYPE_CC),
-  MIDIButton(BUTTON_BUILTIN, 60, 1, MIDI_BUTTON_TYPE_NOTE)
-};
 
 void setup()
 {
-
   Serial.begin(115200);
+  //while ( !Serial ) delay(10);
 
-  setupDisplay();
+  
+  Serial.println("setting up encoder...");
+  setupEncoder();
+  //setupDisplay();
+  Serial.println("setting up bluetooth...");
   setupBluetooth();
+  Serial.println("setting up midi...");
   setupMidi(); //blemidi called in here
+  Serial.println("starting bt advertisement...");
   startBTAdvertisement();
+  Serial.println("setting up lights...");
   setupLights();
+  Serial.println("setting up IMU...");
+  setupIMU();
+  Serial.println("done setting up!");
+  dbgMemInfo();
+  Serial.println("waiting 3 seconds");
+  delay(3000);
 }
 
+void scanI2C() {
+  Serial.println("Scanning I2C...");
+  for (byte address = 1; address < 127; address++) {
+      Wire.beginTransmission(address);
+      if (Wire.endTransmission() == 0) {
+          Serial.print("Found device at 0x");
+          Serial.println(address, HEX);
+      }
+  }
+}
 
 void loop() {
+  //scanI2C();
+  //if (Serial) Serial.println(millis());
   updateSerial();
-
+  //dbgMemInfo();
   updateLED();
+
+  updateFilter();
+  printMadgwick();
+
+  Serial.println(">deviceIsStationary:" + String(deviceIsStationary));
+
+  //Serial.println(getDialValue());
+
+  
+
+  //if (Serial) printIMUReading();
 
   // Don't continue if we aren't connected or the connected device isn't ready to receive messages.
   if (! midiReady()) {
     return;
   }
 
-  // Iterate over all buttons in the vector
-  for (size_t i = 0; i < buttons.size(); ++i) {
-    buttons[i].update();
-  }
-
+  updateControls();
   
   updateDotstar();
 }
+

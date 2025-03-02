@@ -1,9 +1,13 @@
 #include "MIDIButton.h"
 #include "lights_handler.h"
 #include "display_handler.h"
+#include "imu_handler.h"
 
-MIDIButton::MIDIButton(uint8_t pin, byte dataValue, byte channel, byte buttonType)
-  : _pin(pin), _dataValue(dataValue), _channel(channel), _buttonType(buttonType), _currentState(HIGH), _lastState(HIGH), _debouncer(Bounce()) {
+// TODO: make new parameter noteValue that is separate from noteValue to store midi note of button
+// TODO: rename params dataValue, and currentValue to less confusing things
+
+MIDIButton::MIDIButton(uint8_t pin, byte dataValue, byte channel, byte buttonType, const char buttonName[])
+  :name(buttonName), currentValue(0), buttonType(buttonType), _pin(pin), _dataValue(dataValue), _channel(channel), _currentState(HIGH), _lastState(HIGH), _debouncer(Bounce()) {
   pinMode(_pin, INPUT_PULLUP);
   _debouncer.attach(_pin);
   _debouncer.interval(5); // TODO: parameterize this?
@@ -14,22 +18,36 @@ void MIDIButton::update() {
 
     _currentState = _debouncer.read();
 
+  if (buttonType == MIDI_BUTTON_TYPE_DIAL && isPressed()) {
+    currentValue = getDialValue();
+    Serial.print("dial on midi cc number ");
+    Serial.print(_dataValue);
+    Serial.print(" channel ");
+    Serial.print(_channel);
+    Serial.print(" active! value sent: ");
+    Serial.println(currentValue);
+
+    MIDI.sendControlChange(_dataValue, currentValue, _channel);
+  }
+
   if (isRisingEdge()) {  // Button Pressed
     Serial.print("Note On: ");
     Serial.println(_dataValue);
-    if (_buttonType == MIDI_BUTTON_TYPE_NOTE) {
+    currentValue = 127;
+    if (buttonType == MIDI_BUTTON_TYPE_NOTE) {
       MIDI.sendNoteOn(_dataValue, 127, _channel);
-    } else if (_buttonType == MIDI_BUTTON_TYPE_CC) {
+    } else if (buttonType == MIDI_BUTTON_TYPE_CC) {
       MIDI.sendControlChange(_dataValue, 127, _channel);
     }
-    updateLastButtonPress();
+    updateLastButtonPress(); // update dotstar
   } 
   else if (isFallingEdge()) {  // Button Released
     Serial.print("Note Off: ");
     Serial.println(_dataValue);
-    if (_buttonType == MIDI_BUTTON_TYPE_NOTE) {
+    currentValue = 0;
+    if (buttonType == MIDI_BUTTON_TYPE_NOTE) {
       MIDI.sendNoteOff(_dataValue, 0, _channel);
-    } else if (_buttonType == MIDI_BUTTON_TYPE_CC) {
+    } else if (buttonType == MIDI_BUTTON_TYPE_CC) {
       MIDI.sendControlChange(_dataValue, 0, _channel);
     }
   }
