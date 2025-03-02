@@ -7,62 +7,76 @@
 // TODO: rename params dataValue, and currentValue to less confusing things
 
 MIDIButton::MIDIButton(uint8_t pin, byte dataValue, byte channel, byte buttonType, const char buttonName[])
-  :name(buttonName), currentValue(0), buttonType(buttonType), _pin(pin), _dataValue(dataValue), _channel(channel), _currentState(HIGH), _lastState(HIGH), _debouncer(Bounce()) {
-  pinMode(_pin, INPUT_PULLUP);
-  _debouncer.attach(_pin);
-  _debouncer.interval(5); // TODO: parameterize this?
+	: name(buttonName), currentValue(0), buttonType(buttonType), _pin(pin), _dataValue(dataValue), _channel(channel), _currentState(HIGH), _lastState(HIGH), _debouncer(Bounce())
+{
+	pinMode(_pin, INPUT_PULLUP);
+	_debouncer.attach(_pin);
+	_debouncer.interval(5); // TODO: parameterize this?
 }
 
-void MIDIButton::update() {
-    _debouncer.update();
+void MIDIButton::update()
+{
+	_debouncer.update();
 
-    _currentState = _debouncer.read();
+	_currentState = _debouncer.read();
 
-  if (buttonType == MIDI_BUTTON_TYPE_DIAL && isPressed()) {
-    currentValue = getDialValue();
-    Serial.print("dial on midi cc number ");
-    Serial.print(_dataValue);
-    Serial.print(" channel ");
-    Serial.print(_channel);
-    Serial.print(" active! value sent: ");
-    Serial.println(currentValue);
+	if (buttonType == MIDI_BUTTON_TYPE_DIAL && isPressed())
+	{
+		currentValue = getDialValue();
+		Serial.print("dial on midi cc number ");
+		Serial.print(_dataValue);
+		Serial.print(" channel ");
+		Serial.print(_channel);
+		Serial.print(" active! value sent: ");
+		Serial.println(currentValue);
 
-    MIDI.sendControlChange(_dataValue, currentValue, _channel);
-  }
+		MIDI.sendControlChange(_dataValue, currentValue, _channel);
+	}
 
-  if (isRisingEdge()) {  // Button Pressed
-    Serial.print("Note On: ");
-    Serial.println(_dataValue);
-    currentValue = 127;
-    if (buttonType == MIDI_BUTTON_TYPE_NOTE) {
-      MIDI.sendNoteOn(_dataValue, 127, _channel);
-    } else if (buttonType == MIDI_BUTTON_TYPE_CC) {
-      MIDI.sendControlChange(_dataValue, 127, _channel);
-    }
-    updateLastButtonPress(); // update dotstar
-  } 
-  else if (isFallingEdge()) {  // Button Released
-    Serial.print("Note Off: ");
-    Serial.println(_dataValue);
-    currentValue = 0;
-    if (buttonType == MIDI_BUTTON_TYPE_NOTE) {
-      MIDI.sendNoteOff(_dataValue, 0, _channel);
-    } else if (buttonType == MIDI_BUTTON_TYPE_CC) {
-      MIDI.sendControlChange(_dataValue, 0, _channel);
-    }
-  }
+	if (isRisingEdge())
+	{ // Button Pressed
+		Serial.print("Note On: ");
+		Serial.println(_dataValue);
+		currentValue = 127;
+		if (buttonType == MIDI_BUTTON_TYPE_NOTE)
+		{
+			MIDI.sendNoteOn(_dataValue, 127, _channel);
+		}
+		else if (buttonType == MIDI_BUTTON_TYPE_CC)
+		{
+			MIDI.sendControlChange(_dataValue, 127, _channel);
+		}
+		updateLastButtonPress(); // update dotstar
+	}
+	else if (isFallingEdge())
+	{ // Button Released
+		Serial.print("Note Off: ");
+		Serial.println(_dataValue);
+		currentValue = 0;
+		if (buttonType == MIDI_BUTTON_TYPE_NOTE)
+		{
+			MIDI.sendNoteOff(_dataValue, 0, _channel);
+		}
+		else if (buttonType == MIDI_BUTTON_TYPE_CC)
+		{
+			MIDI.sendControlChange(_dataValue, 0, _channel);
+		}
+	}
 
-  _lastState = _currentState;
+	_lastState = _currentState;
 }
 
-bool MIDIButton::isPressed() {
-  return _currentState == LOW;
+bool MIDIButton::isPressed()
+{
+	return _currentState == LOW;
 }
 
-bool MIDIButton::isRisingEdge() {
-  return _currentState == LOW && _lastState == HIGH;
+bool MIDIButton::isRisingEdge()
+{
+	return _currentState == LOW && _lastState == HIGH;
 }
 
-bool MIDIButton::isFallingEdge() {
-  return _currentState == HIGH && _lastState == LOW;
+bool MIDIButton::isFallingEdge()
+{
+	return _currentState == HIGH && _lastState == LOW;
 }

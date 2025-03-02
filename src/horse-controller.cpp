@@ -1,12 +1,12 @@
 /*********************************************************************
- * horse-controller.cpp - Main file for the Horse Controller
- * 
- * This file is the main file for the Horse Controller. It sets up the
- * Bluetooth connection, MIDI connection, and the button and LED
- * hardware. It also contains the main loop for the controller.
- * 
- * Author: oddhorse (John Trinh)
-*********************************************************************/
+ * horse-controller.cpp - main file for horse controller
+ *
+ * main file for horse controller. sets up
+ * bluetooth connection, MIDI connection, and the button and LED
+ * hardware. also contains main loop for controller.
+ *
+ * author: oddhorse (John Trinh)
+ *********************************************************************/
 
 // TODO: use namespaces in __handler files
 
@@ -18,77 +18,76 @@
 
 #include "MIDIButton.h"
 #include "imu_handler.h"
-//#include "display_handler.h"
+// #include "display_handler.h"
 #include "control_handler.h"
 #include "midi_handler.h"
 #include "lights_handler.h"
 #include "bluetooth_handler.h"
 #include "device_info.h"
 #include "serial_info.h"
-#include "util.h"
-
 
 void setup()
 {
-  Serial.begin(115200);
-  //while ( !Serial ) delay(10);
+	Serial.begin(115200);
+	// while ( !Serial ) delay(10);
 
-  
-  Serial.println("setting up encoder...");
-  setupEncoder();
-  //setupDisplay();
-  Serial.println("setting up bluetooth...");
-  setupBluetooth();
-  Serial.println("setting up midi...");
-  setupMidi(); //blemidi called in here
-  Serial.println("starting bt advertisement...");
-  startBTAdvertisement();
-  Serial.println("setting up lights...");
-  setupLights();
-  Serial.println("setting up IMU...");
-  setupIMU();
-  Serial.println("done setting up!");
-  dbgMemInfo();
-  Serial.println("waiting 3 seconds");
-  delay(3000);
+	Serial.println("setting up encoder...");
+	setupEncoder();
+	// setupDisplay();
+	Serial.println("setting up bluetooth...");
+	setupBluetooth();
+	Serial.println("setting up midi...");
+	setupMidi(); // blemidi called in here
+	Serial.println("starting bt advertisement...");
+	startBTAdvertisement();
+	Serial.println("setting up lights...");
+	setupLights();
+	Serial.println("setting up IMU...");
+	setupIMU();
+	Serial.println("done setting up!");
+	dbgMemInfo();
+	Serial.println("waiting 3 seconds");
+	delay(3000);
 }
 
-void scanI2C() {
-  Serial.println("Scanning I2C...");
-  for (byte address = 1; address < 127; address++) {
-      Wire.beginTransmission(address);
-      if (Wire.endTransmission() == 0) {
-          Serial.print("Found device at 0x");
-          Serial.println(address, HEX);
-      }
-  }
+void scanI2C()
+{
+	Serial.println("Scanning I2C...");
+	for (byte address = 1; address < 127; address++)
+	{
+		Wire.beginTransmission(address);
+		if (Wire.endTransmission() == 0)
+		{
+			Serial.print("Found device at 0x");
+			Serial.println(address, HEX);
+		}
+	}
 }
 
-void loop() {
-  //scanI2C();
-  //if (Serial) Serial.println(millis());
-  updateSerial();
-  //dbgMemInfo();
-  updateLED();
+void loop()
+{
+	// scanI2C();
+	// if (Serial) Serial.println(millis());
+	updateSerial();
+	// dbgMemInfo();
+	updateLED();
 
-  updateFilter();
-  printMadgwick();
+	updateFilter();
+	printMadgwick();
 
-  Serial.println(">deviceIsStationary:" + String(deviceIsStationary));
+	Serial.println(">deviceIsStationary:" + String(deviceIsStationary));
 
-  //Serial.println(getDialValue());
+	// Serial.println(getDialValue());
 
-  
+	// if (Serial) printIMUReading();
 
-  //if (Serial) printIMUReading();
+	// Don't continue if we aren't connected or the connected device isn't ready to receive messages.
+	if (!midiReady())
+	{
+		return;
+	}
 
-  // Don't continue if we aren't connected or the connected device isn't ready to receive messages.
-  if (! midiReady()) {
-    return;
-  }
+	updateControls();
 
-  updateControls();
-  
-  updateDotstar();
+	updateDotstar();
 }
-

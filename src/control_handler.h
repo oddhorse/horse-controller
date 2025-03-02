@@ -6,8 +6,8 @@
  * It provides functions to update and set the encoder values.
  */
 
-#define CORE_INT12_PIN		12
-#define CORE_INT13_PIN		13
+#define CORE_INT12_PIN 12
+#define CORE_INT13_PIN 13
 #define ENCODER_OPTIMIZE_INTERRUPTS
 #ifndef CONTROL_HANDLER_H
 #define CONTROL_HANDLER_H
