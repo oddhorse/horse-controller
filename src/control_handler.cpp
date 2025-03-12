@@ -61,8 +61,10 @@ namespace Ctrls
 	std::vector<MIDIButton> buttons = {
 		MIDIButton(PINKY_FINGER_PIN, 19, 1, MIDI_BUTTON_TYPE_CC, "pinky"),
 		MIDIButton(RING_FINGER_PIN, 18, 1, MIDI_BUTTON_TYPE_DIAL, "ring"),
-		MIDIButton(MIDDLE_FINGER_PIN, 17, 1, MIDI_BUTTON_TYPE_CC, "middle"),
-		MIDIButton(INDEX_FINGER_PIN, 16, 1, MIDI_BUTTON_TYPE_CC, "index"),
+		// MIDIButton(MIDDLE_FINGER_PIN, 17, 1, MIDI_BUTTON_TYPE_CC, "middle"),
+		// MIDIButton(INDEX_FINGER_PIN, 16, 1, MIDI_BUTTON_TYPE_CC, "index"),
+		MIDIButton(MIDDLE_FINGER_PIN, 60, 1, MIDI_BUTTON_TYPE_NOTE, "middle"),
+		MIDIButton(INDEX_FINGER_PIN, 67, 1, MIDI_BUTTON_TYPE_NOTE, "index"),
 		MIDIButton(BUTTON_BUILTIN, 60, 1, MIDI_BUTTON_TYPE_NOTE, "builtin")};
 
 	void setupEncoder()

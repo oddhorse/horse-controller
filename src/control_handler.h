@@ -34,8 +34,6 @@ namespace Ctrls
      */
     extern std::vector<MIDIButton> buttons;
 
-    void encoderISR();
-
     void setupEncoder();
 
     /**
