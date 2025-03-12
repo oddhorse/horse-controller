@@ -4,11 +4,12 @@ code for a midi controller using an Adafruit ItsyBitsy nRF52840 Express. bluetoo
 
 ## dependencies
 
-i'm using platformio instead of arduino because i wanna use real c++ and not that little fucking mutant thing arduino insists on. other libraries used (other than bluefruit, the board's core library):
+i'm using platformio instead of arduino ide because i wanna be a REAL boy and use REAL .cpp files
+
+other libraries used (other than bluefruit, the board's core library):
 
 - [Adafruit DotStar](https://github.com/adafruit/Adafruit_DotStar) (for the neat little rgb light on the board)
 - [MIDI Library](https://github.com/FortySevenEffects/arduino_midi_library) (for um midi)
-
 
 ## setup and usage
 
