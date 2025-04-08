@@ -15,6 +15,7 @@
 #define MIDI_BUTTON_TYPE_NOTE 0
 #define MIDI_BUTTON_TYPE_CC 1
 #define MIDI_BUTTON_TYPE_DIAL 2
+#define MIDI_BUTTON_TYPE_PUNCH 3
 
 extern midi::MidiInterface<midi::SerialMIDI<BLEMidi>> MIDI;
 
@@ -47,6 +48,7 @@ private:
 	bool _currentState;
 	bool _lastState;
 	Bounce _debouncer;
+	bool _isNoteOn;
 };
 
 #endif

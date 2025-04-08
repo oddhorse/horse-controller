@@ -13,9 +13,12 @@
  *
  * @author oddhorse (John Trinh)
  */
+
+#include "imu_handler.h"
 #include <Arduino.h>
 #include <Adafruit_ICM20948.h>
 #include <MadgwickAHRS.h>
+#include "util.h"
 
 // sets icm and madgwick filter rate in hz
 // must be one of: 10, 20, 50, 100 Hz!
@@ -41,9 +44,13 @@ int stationaryCount = 0;
 
 boolean deviceIsStationary = false;
 
+// flips to true when accelerometer peaks. must be flipped off by other means!
+boolean noteTriggered = false;
+int IMUVelocityOut = 0;
+
 float gyroBiasX = 0, gyroBiasY = 0, gyroBiasZ = 0;
 // takes a number of gyro readings and averages them. i'm not sure if this really works. regardless i'm not using it for now cuz it seems to be working fine without
-void calibrateGyro(int samples = 500)
+void calibrateGyro(int samples)
 {
 	float sumX = 0, sumY = 0, sumZ = 0;
 
@@ -107,7 +114,7 @@ void setupIMU()
 	icm.setMagDataRate(MAG_RATE);
 
 	// TODO: play with built in sensor filters?
-	// icm.enableAccelDLPF(enable, 1.3);
+	icm.enableAccelDLPF(true, ICM20X_ACCEL_FREQ_5_7_HZ);
 
 	// init madgwick filter
 	filter.begin(FILTER_RATE);
@@ -333,4 +340,86 @@ void updateFilter()
 		// increment previous time, so we keep proper pace
 		microsPrevious = microsPrevious + MICROS_PER_READING;
 	}
+}
+
+// get deltas
+sensors_event_t oldAccel;
+bool isFirstReading = true;
+unsigned long punchTime = millis();
+int highest = 0;
+bool peakDetected = false;
+int accum = 0;
+
+#define PUNCH_TIMEOUT 20
+// monitors accelerometer peaking
+void updatePeakDetection()
+{
+	//  /* Get a new normalized sensor event */
+	sensors_event_t accel, gyro, mag, temp;
+	icm.getEvent(&accel, &gyro, &temp, &mag);
+
+	if (isFirstReading)
+	{
+		oldAccel = accel;
+		isFirstReading = false;
+	}
+
+	// if no buttons are pressed, need a way to flip noteTriggered back
+	if (noteTriggered && millis() - punchTime > PUNCH_TIMEOUT)
+	{
+		noteTriggered = false;
+	}
+
+	// get deltas
+	float dX, dY, dZ;
+	dX = accel.acceleration.x - oldAccel.acceleration.x;
+	dY = accel.acceleration.y - oldAccel.acceleration.y;
+	dZ = accel.acceleration.z - oldAccel.acceleration.z;
+
+	Util::teleplot("accel_x", accel.acceleration.x);
+	Util::teleplot("accel_y", accel.acceleration.y);
+	Util::teleplot("accel_z", accel.acceleration.z);
+	Util::teleplot("delta_accel_x", dX);
+	Util::teleplot("delta_accel_y", dY);
+	Util::teleplot("delta_accel_z", dZ);
+
+	if (dX > 8)
+	{
+		if (!peakDetected)
+		{
+			peakDetected = true;
+			highest = dX;
+			accum = 0;
+		}
+	}
+
+	if (peakDetected)
+	{
+		accum += dX; // accumulates change in accel while change is positive; final value is full acceleration change from beginning of peak
+		if (dX > highest)
+		{
+			highest = dX;
+		}
+	}
+
+	if (dX <= 0 && peakDetected)
+	{
+		int timeBetween = millis() - punchTime;
+		Serial.print("time since last note: ");
+		Serial.println(timeBetween);
+		// TODO: choose between highest change in acceleration or accumulated change for determining velocity!
+		Serial.print("highest change in acceleration: ");
+		Serial.println(highest);
+		Util::teleplot("highest_change", highest);
+		Serial.print("accumulated change in acceleration: ");
+		Serial.println(accum);
+		Util::teleplot("accum", accum);
+		noteTriggered = true;
+		peakDetected = false;
+		IMUVelocityOut = round(map(accum, 8, 112, 1, 127));
+
+		punchTime = millis();
+	}
+
+	oldAccel = accel;
 }

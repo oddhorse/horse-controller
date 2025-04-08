@@ -72,6 +72,7 @@ void loop()
 	updateLED();
 
 	updateFilter();
+	updatePeakDetection();
 	printMadgwick();
 
 	Serial.println(">deviceIsStationary:" + String(deviceIsStationary));

@@ -20,6 +20,8 @@
 extern Adafruit_ICM20948 icm;
 
 extern boolean deviceIsStationary;
+extern boolean noteTriggered;
+extern int IMUVelocityOut;
 
 void setupIMU();
 void printIMUSettings();
@@ -28,5 +30,6 @@ void printMadgwick();
 void updateFilter();
 void calibrateGyro(int samples = 500);
 int getDialValue();
+void updatePeakDetection();
 
 #endif // IMU_HANDLER_H
