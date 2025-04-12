@@ -28,7 +28,7 @@
 void setup()
 {
 	Serial.begin(115200);
-	// while ( !Serial ) delay(10);
+	// while (!Serial) delay(10);
 
 	Serial.println("setting up encoder...");
 	Ctrls::setupEncoder();
@@ -67,16 +67,11 @@ void loop()
 {
 	// scanI2C();
 	// if (Serial) Serial.println(millis());
-	updateSerial();
+	// updateSerial();
 	// dbgMemInfo();
-	updateLED();
+	// updateLED();
 
-	updateFilter();
 	updatePeakDetection();
-	printMadgwick();
-
-	Serial.println(">deviceIsStationary:" + String(deviceIsStationary));
-
 	// Serial.println(getDialValue());
 
 	// if (Serial) printIMUReading();
@@ -89,5 +84,5 @@ void loop()
 
 	Ctrls::updateControls();
 
-	updateDotstar();
+	// updateDotstar();
 }

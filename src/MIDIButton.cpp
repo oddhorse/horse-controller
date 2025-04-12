@@ -34,19 +34,6 @@ void MIDIButton::update()
 
 	_currentState = _debouncer.read();
 
-	if (buttonType == MIDI_BUTTON_TYPE_DIAL && isPressed())
-	{
-		currentValue = getDialValue();
-		Serial.print("dial on midi cc number ");
-		Serial.print(_dataValue);
-		Serial.print(" channel ");
-		Serial.print(_channel);
-		Serial.print(" active! value sent: ");
-		Serial.println(currentValue);
-
-		MIDI.sendControlChange(_dataValue, currentValue, _channel);
-	}
-
 	if (buttonType == MIDI_BUTTON_TYPE_PUNCH && _isNoteOn)
 	{
 		MIDI.sendNoteOff(_dataValue, 0, _channel);

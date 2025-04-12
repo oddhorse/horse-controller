@@ -15,21 +15,14 @@
 #define IMU_HANDLER_H
 
 #include <Arduino.h>
-#include <Adafruit_ICM20948.h>
+#include <Adafruit_LIS3DH.h>
 
-extern Adafruit_ICM20948 icm;
+extern Adafruit_LIS3DH lis;
 
-extern boolean deviceIsStationary;
 extern boolean noteTriggered;
 extern int IMUVelocityOut;
 
 void setupIMU();
-void printIMUSettings();
-void printIMUReading();
-void printMadgwick();
-void updateFilter();
-void calibrateGyro(int samples = 500);
-int getDialValue();
 void updatePeakDetection();
 
 #endif // IMU_HANDLER_H
