@@ -55,6 +55,9 @@ void MIDIButton::update()
 
 	if (buttonType == MIDI_BUTTON_TYPE_PUNCH && isPressed())
 	{
+
+		Serial.print("button pressed: ");
+		Serial.println(_dataValue);
 		if (noteTriggered)
 		{
 			Serial.print("Note On: ");
