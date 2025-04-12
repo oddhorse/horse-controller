@@ -383,7 +383,7 @@ void updatePeakDetection()
 	Util::teleplot("delta_accel_y", dY);
 	Util::teleplot("delta_accel_z", dZ);
 
-	if (dX > 6)
+	if (dX > 4.5)
 	{
 		if (!peakDetected)
 		{

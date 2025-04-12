@@ -23,7 +23,7 @@
 #define PINKY_FINGER_PIN 11
 #define RING_FINGER_PIN 10
 #define MIDDLE_FINGER_PIN 9
-#define INDEX_FINGER_PIN 7
+#define INDEX_FINGER_PIN 12
 
 namespace
 {
