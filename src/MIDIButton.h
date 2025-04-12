@@ -49,6 +49,7 @@ private:
 	bool _lastState;
 	Bounce _debouncer;
 	bool _isNoteOn;
+	unsigned long _noteTime;
 };
 
 #endif

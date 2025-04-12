@@ -91,7 +91,7 @@ void updatePeakDetection()
 	Util::teleplot("delta_accel_y", dY);
 	Util::teleplot("delta_accel_z", dZ);
 
-	if (dZ > 7)
+	if (dZ > 8)
 	{
 		if (!peakDetected && millis() - punchTime > 41)
 		{

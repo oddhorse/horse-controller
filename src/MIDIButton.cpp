@@ -21,7 +21,7 @@
 // TODO: rename params dataValue, and currentValue to less confusing things
 
 MIDIButton::MIDIButton(uint8_t pin, byte dataValue, byte channel, byte buttonType, const char buttonName[])
-	: name(buttonName), currentValue(0), buttonType(buttonType), _pin(pin), _dataValue(dataValue), _channel(channel), _currentState(HIGH), _lastState(HIGH), _debouncer(Bounce()), _isNoteOn(false)
+	: name(buttonName), currentValue(0), buttonType(buttonType), _pin(pin), _dataValue(dataValue), _channel(channel), _currentState(HIGH), _lastState(HIGH), _debouncer(Bounce()), _isNoteOn(false), _noteTime(millis())
 {
 	pinMode(_pin, INPUT_PULLUP);
 	_debouncer.attach(_pin);
@@ -36,7 +36,7 @@ void MIDIButton::update()
 
 	if (buttonType == MIDI_BUTTON_TYPE_PUNCH && _isNoteOn)
 	{
-		MIDI.sendNoteOff(_dataValue, 0, _channel);
+		MIDI.sendNoteOff(_dataValue, 127, _channel);
 		_isNoteOn = false;
 	}
 
@@ -46,7 +46,7 @@ void MIDIButton::update()
 		{
 			Serial.print("Note On: ");
 			Serial.println(_dataValue);
-			MIDI.sendNoteOn(_dataValue, IMUVelocityOut, _channel);
+			MIDI.sendNoteOn(_dataValue, 127, _channel);
 			_isNoteOn = true;
 			noteTriggered = false;
 		}
