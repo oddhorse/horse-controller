@@ -52,6 +52,11 @@ void MIDIButton::update()
 		}
 	}
 
+	if (buttonType == MIDI_BUTTON_TYPE_CC && isPressed())
+	{
+		MIDI.sendControlChange(_dataValue, getYAccelVal(), _channel);
+	}
+
 	if (buttonType != MIDI_BUTTON_TYPE_PUNCH)
 	{
 		if (isRisingEdge())
@@ -63,10 +68,6 @@ void MIDIButton::update()
 			{
 				MIDI.sendNoteOn(_dataValue, 127, _channel);
 			}
-			else if (buttonType == MIDI_BUTTON_TYPE_CC)
-			{
-				MIDI.sendControlChange(_dataValue, 127, _channel);
-			}
 			updateLastButtonPress(); // update dotstar
 		}
 		else if (isFallingEdge())
@@ -77,10 +78,6 @@ void MIDIButton::update()
 			if (buttonType == MIDI_BUTTON_TYPE_NOTE)
 			{
 				MIDI.sendNoteOff(_dataValue, 0, _channel);
-			}
-			else if (buttonType == MIDI_BUTTON_TYPE_CC)
-			{
-				MIDI.sendControlChange(_dataValue, 0, _channel);
 			}
 		}
 	}

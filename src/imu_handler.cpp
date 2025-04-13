@@ -19,6 +19,7 @@
 #include <Adafruit_LIS3DH.h>
 #include "util.h"
 #include <Adafruit_Sensor.h>
+#include "midi_handler.h"
 
 Adafruit_LIS3DH lis = Adafruit_LIS3DH();
 
@@ -39,6 +40,16 @@ unsigned long punchTime = millis();
 int highest = 0;
 bool peakDetected = false;
 int accum = 0;
+
+int getYAccelVal()
+{
+	sensors_event_t accel;
+	lis.getEvent(&accel);
+
+	int y = accel.acceleration.y;
+	y = map(y, -20, 20, 0, 127);
+	return y;
+}
 
 void setupIMU()
 {

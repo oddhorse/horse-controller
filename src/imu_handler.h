@@ -24,5 +24,6 @@ extern int IMUVelocityOut;
 
 void setupIMU();
 void updatePeakDetection();
+int getYAccelVal();
 
 #endif // IMU_HANDLER_H

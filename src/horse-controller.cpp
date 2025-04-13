@@ -70,6 +70,7 @@ void loop()
 	// updateSerial();
 	// dbgMemInfo();
 	// updateLED();
+	getYAccelVal();
 
 	updatePeakDetection();
 	// Serial.println(getDialValue());
