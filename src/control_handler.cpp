@@ -59,7 +59,7 @@ namespace Ctrls
 	unsigned long timeOfLastChange = 0;
 
 	std::vector<MIDIButton> buttons = {
-		MIDIButton(PINKY_FINGER_PIN, 38, 2, MIDI_BUTTON_TYPE_DIAL, "pinky"),
+		MIDIButton(PINKY_FINGER_PIN, 40, 2, MIDI_BUTTON_TYPE_PUNCH, "pinky"),
 		MIDIButton(INDEX_FINGER_PIN, 49, 2, MIDI_BUTTON_TYPE_CC, "index"),
 		// MIDIButton(MIDDLE_FINGER_PIN, 17, 1, MIDI_BUTTON_TYPE_CC, "middle"),
 		// MIDIButton(INDEX_FINGER_PIN, 16, 1, MIDI_BUTTON_TYPE_CC, "index"),
